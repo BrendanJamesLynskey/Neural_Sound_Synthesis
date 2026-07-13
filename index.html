@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neural Sound Synthesis — an ML/AI audio synthesis series</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false});"></script>
+<style>
+:root {
+  --bg: #0a0b0f;
+  --bg2: #12141c;
+  --bg3: #1a1d2a;
+  --fg: #d4d6e0;
+  --fg-dim: #8a8d9a;
+  --accent: #8b7bf0;
+  --accent2: #4ac7e8;
+  --accent3: #5ce89a;
+  --accent4: #e85a7a;
+  --accent5: #e8a44a;
+  --border: #2a2d3a;
+  --glow: rgba(139,123,240,0.15);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--bg);color:var(--fg);font-family:'Palatino Linotype','Book Antiqua',Palatino,'Georgia',serif;line-height:1.75;overflow-x:hidden}
+::selection{background:var(--accent);color:var(--bg)}
+a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .2s}
+a:hover{border-bottom-color:var(--accent)}
+
+header{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:2rem;position:relative;overflow:hidden}
+header canvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;opacity:.55}
+header .content{position:relative;z-index:1;max-width:900px}
+header .eyebrow{font-family:'Lucida Console',Monaco,monospace;font-size:.8rem;letter-spacing:.32em;text-transform:uppercase;color:var(--accent2);margin-bottom:1.4em}
+header h1{font-size:clamp(2.2rem,6vw,4rem);font-weight:300;letter-spacing:.04em;color:var(--accent);text-shadow:0 0 60px rgba(139,123,240,.35);margin-bottom:.3em}
+header h1 em{font-style:italic;color:var(--fg);font-weight:400}
+header .subtitle{font-size:1.14rem;color:var(--fg-dim);max-width:720px;margin:0 auto 2em}
+header .people{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;margin-bottom:2em}
+header .people span{font-size:.82rem;color:var(--fg);padding:.35em .9em;border:1px solid var(--border);border-radius:2px;background:rgba(26,29,42,.7)}
+header .cta{display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap}
+
+nav#toc{position:sticky;top:0;z-index:100;background:rgba(10,11,15,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:.6rem 1rem;overflow-x:auto;white-space:nowrap;text-align:center}
+nav#toc a{display:inline-block;font-size:.78rem;color:var(--fg-dim);padding:.3em .7em;margin:0 .1em;letter-spacing:.04em;text-transform:uppercase;font-family:'Lucida Console',Monaco,monospace;transition:color .2s;border-bottom:none}
+nav#toc a:hover,nav#toc a.active{color:var(--accent)}
+
+section{max-width:960px;margin:0 auto;padding:4rem 1.5rem;border-bottom:1px solid var(--border)}
+section:last-of-type{border-bottom:none}
+h2{font-size:clamp(1.5rem,3vw,2.2rem);font-weight:300;color:var(--accent);margin-bottom:.3em;letter-spacing:.03em}
+h2 .num{font-family:'Lucida Console',Monaco,monospace;font-size:.7em;color:var(--fg-dim);margin-right:.5em}
+h3{font-size:1.2rem;color:var(--accent2);margin:2em 0 .5em;font-weight:400}
+p{margin-bottom:1.2em}
+.lead{font-size:1.1rem;color:var(--fg);margin-bottom:1.5em}
+
+.viz{margin:2em 0;background:var(--bg2);border:1px solid var(--border);border-radius:4px;overflow:hidden}
+.viz canvas{display:block;width:100%;cursor:crosshair}
+.viz-caption{font-size:.8rem;color:var(--fg-dim);padding:.6em 1em;border-top:1px solid var(--border);font-family:'Lucida Console',Monaco,monospace}
+.controls{display:flex;flex-wrap:wrap;gap:.8rem;padding:.8em 1em;background:var(--bg3);border-top:1px solid var(--border);align-items:center}
+.controls label{font-size:.78rem;color:var(--fg-dim);font-family:'Lucida Console',Monaco,monospace;display:flex;align-items:center;gap:.4em}
+.controls button,.btn{background:var(--accent);color:var(--bg);border:none;padding:.5em 1.1em;font-size:.8rem;font-family:'Lucida Console',Monaco,monospace;cursor:pointer;border-radius:2px;letter-spacing:.03em;transition:background .2s}
+.controls button:hover,.btn:hover{background:#a99bf5}
+.btn-outline{background:transparent;border:1px solid var(--accent);color:var(--accent)}
+.btn-outline:hover{background:var(--accent);color:var(--bg)}
+
+.math{display:block;text-align:center;padding:1.4em 1.2em;margin:1.5em 0;background:var(--bg2);border-left:3px solid var(--accent);font-size:1.1rem;color:var(--fg);overflow-x:auto;border-radius:0 4px 4px 0}
+.math .katex{font-size:1.18em}
+
+blockquote{border-left:3px solid var(--accent5);padding:.8em 1.2em;margin:1.5em 0;color:var(--fg-dim);font-style:italic;background:rgba(232,164,74,.05)}
+blockquote cite{display:block;font-size:.85rem;color:var(--accent5);margin-top:.5em;font-style:normal}
+
+.note{font-size:.9rem;color:var(--fg-dim);margin:1em 0;padding:.7em 1em;border-left:2px solid var(--accent3);background:rgba(92,232,154,.05)}
+
+table{width:100%;border-collapse:collapse;margin:1.5em 0;font-size:.9rem}
+th,td{padding:.5em .8em;border:1px solid var(--border);text-align:left;vertical-align:top}
+th{background:var(--bg3);color:var(--accent2);font-weight:400;font-family:'Lucida Console',Monaco,monospace;font-size:.76rem;letter-spacing:.03em}
+td{color:var(--fg-dim)}
+td code,p code{font-family:'Lucida Console',Monaco,monospace;font-size:.85em;color:var(--accent3);background:rgba(92,232,154,.07);padding:.05em .3em;border-radius:2px}
+
+/* curriculum grid */
+.parts{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;margin:2em 0}
+.part{position:relative;display:flex;flex-direction:column;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:1.2em 1.3em;transition:border-color .2s,transform .2s;border-bottom:1px solid var(--border)}
+.part:hover{border-color:var(--accent);transform:translateY(-2px)}
+.part .pnum{font-family:'Lucida Console',Monaco,monospace;font-size:.72rem;color:var(--fg-dim);letter-spacing:.12em}
+.part h4{font-size:1.05rem;color:var(--fg);margin:.35em 0 .5em;font-weight:400;line-height:1.35}
+.part p{font-size:.86rem;color:var(--fg-dim);margin-bottom:1em;flex:1}
+.part .plink{font-family:'Lucida Console',Monaco,monospace;font-size:.74rem;letter-spacing:.04em;text-transform:uppercase;border-bottom:none}
+.part .tag{position:absolute;top:1.1em;right:1.1em;font-family:'Lucida Console',Monaco,monospace;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.2em .5em;border-radius:2px}
+.tag.live{color:var(--accent3);border:1px solid rgba(92,232,154,.4);background:rgba(92,232,154,.08)}
+.tag.soon{color:var(--fg-dim);border:1px solid var(--border);background:var(--bg3)}
+.part.pillar-voice{border-left:3px solid var(--accent4)}
+.part.pillar-music{border-left:3px solid var(--accent5)}
+.part.pillar-core{border-left:3px solid var(--accent2)}
+.legend{display:flex;gap:1.2em;flex-wrap:wrap;font-size:.8rem;color:var(--fg-dim);font-family:'Lucida Console',Monaco,monospace;margin-top:1em}
+.legend span{display:flex;align-items:center;gap:.4em}
+.legend i{width:14px;height:3px;display:inline-block;border-radius:2px}
+
+.references{margin-top:2em;padding:1.5em;background:var(--bg2);border:1px solid var(--border);border-radius:4px}
+.references h3{margin-top:0}
+.references ol{padding-left:1.5em}
+.references li{font-size:.85rem;color:var(--fg-dim);margin-bottom:.5em;line-height:1.5}
+.references li em{color:var(--fg)}
+
+footer{text-align:center;padding:3em 1.5em;color:var(--fg-dim);font-size:.85rem;border-top:1px solid var(--border)}
+footer a{color:var(--accent2)}
+
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--fg-dim)}
+</style>
+</head>
+<body>
+
+<header>
+  <canvas id="heroCanvas"></canvas>
+  <div class="content">
+    <div class="eyebrow">A twelve-part interactive series</div>
+    <h1>Neural <em>Sound Synthesis</em></h1>
+    <p class="subtitle">
+      How machine learning learned to <em>make</em> sound — the voice, music, and
+      instruments — from WaveNet's sample-by-sample gamble to diffusion models and
+      language models that compose. Deep theory, live in-browser demos, and the maths
+      worked all the way through. Every sound on these pages is synthesised live in the
+      Web Audio API; every diagram computes in real time.
+    </p>
+    <div class="people">
+      <span>WaveNet</span><span>Tacotron</span><span>HiFi-GAN</span><span>DDSP</span>
+      <span>DiffWave</span><span>EnCodec</span><span>MusicGen</span><span>Stable Audio</span>
+    </div>
+    <div class="cta">
+      <a href="#curriculum" class="btn">Explore the series &#8595;</a>
+      <a href="https://brendanjameslynskey.github.io/Neural_Sound_Synthesis_01_Foundations_and_Landscape/" class="btn btn-outline" target="_blank" rel="noopener">Start with Part 1</a>
+    </div>
+  </div>
+</header>
+
+<nav id="toc">
+  <a href="#about">About</a>
+  <a href="#map">The Map</a>
+  <a href="#pillars">Three Pillars</a>
+  <a href="#curriculum">Curriculum</a>
+  <a href="#eval">How We Judge</a>
+  <a href="#how">How To Read</a>
+</nav>
+
+<section id="about">
+  <h2><span class="num">§</span>What this series is</h2>
+  <p class="lead">
+    For seventy years, synthesising sound meant hand-designing a signal-processing
+    algorithm — an oscillator bank, a filter, a physical model of a string. You wrote
+    the equations; the computer executed them. <strong>Neural sound synthesis inverts
+    that</strong>: you supply examples of the sound you want, and a network learns the
+    generating process itself, discovering structure no engineer wrote down.
+  </p>
+  <p>
+    This series is a comprehensive, technical tour of that revolution — the models,
+    the mathematics, and the ideas that connect them. It is built for people who want
+    to <em>understand</em>, not just use: every part derives its core equations, shows
+    the architecture as an interactive diagram, and lets you hear the technique running
+    live. It sits alongside the classical-DSP synthesis work in the
+    <a href="https://github.com/BrendanJamesLynskey/DSP_and_Music" target="_blank" rel="noopener">DSP&nbsp;&amp;&nbsp;Music</a>
+    collection — where neural methods stand on the shoulders of the vocoder, the
+    spectrogram, and differentiable filters.
+  </p>
+  <blockquote>
+    The central question of the field: an audio second is 16,000–48,000 numbers, each
+    depending on all the others. How do you learn a probability distribution over
+    <em>that</em> — and sample from it fast enough to be useful?
+    <cite>— the thread running through all twelve parts</cite>
+  </blockquote>
+</section>
+
+<section id="map">
+  <h2><span class="num">§</span>The map of the field</h2>
+  <p>
+    Every generative-audio system is a choice along two axes: <strong>what domain</strong>
+    it models the sound in (raw samples, a spectrogram, discrete tokens, or a learned
+    latent), and <strong>what generative family</strong> it uses to place a distribution
+    over that domain. Hover the map to trace where each landmark model sits — the whole
+    series is a walk across this plane.
+  </p>
+  <div class="viz">
+    <canvas id="mapViz" height="440" aria-label="Interactive map of neural audio models by domain and generative family"></canvas>
+    <div class="controls">
+      <span style="font-size:.78rem;color:var(--fg-dim);font-family:'Lucida Console',monospace">Hover a model &middot; axes: representation domain (x) &times; generative family (y)</span>
+    </div>
+    <div class="viz-caption" id="mapCaption">The landscape of neural sound synthesis — hover any node.</div>
+  </div>
+  <p class="note">
+    Nothing on this map is purely one thing. VITS is a flow <em>and</em> a VAE
+    <em>and</em> a GAN; MusicGen is a language model over a codec's tokens. The families
+    are lenses, not boxes — and the most capable modern systems deliberately combine them.
+  </p>
+</section>
+
+<section id="pillars">
+  <h2><span class="num">§</span>Three pillars: voice, music, instruments</h2>
+  <p>
+    The series covers the whole of synthetic sound, but three application pillars recur.
+    Each imposes different constraints, and the techniques cross-pollinate constantly.
+  </p>
+  <table>
+    <thead><tr><th>Pillar</th><th>What is hard about it</th><th>Signature techniques &amp; parts</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong style="color:var(--accent4)">The Voice</strong><br>speech &amp; singing</td>
+        <td>Intelligibility is unforgiving; humans are expert critics of voices. Prosody,
+        pitch, vibrato and phoneme timing must all be controllable and natural.</td>
+        <td>Vocoders (P3), TTS acoustic models &amp; VITS (P4), singing-voice synthesis
+        &amp; voice conversion (P5)</td>
+      </tr>
+      <tr>
+        <td><strong style="color:var(--accent5)">Music</strong><br>full mixes &amp; songs</td>
+        <td>Structure over minutes, many simultaneous sources, and text/style control.
+        The long-range-dependency problem at its most extreme.</td>
+        <td>Neural codecs (P9), language-model music (P10), latent-diffusion
+        text-to-audio (P11)</td>
+      </tr>
+      <tr>
+        <td><strong style="color:var(--accent2)">Instruments</strong><br>single-note timbre</td>
+        <td>Continuous, meaningful control of timbre and pitch; faithful attack
+        transients; interpolation between instruments that never existed.</td>
+        <td>DDSP (P6), GAN instrument synthesis / GANSynth (P7), real-time timbre
+        transfer (P12)</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="curriculum">
+  <h2><span class="num">§</span>The twelve parts</h2>
+  <p class="lead">
+    Read in order for a complete education, or jump to a technique. Each part is a
+    standalone interactive presentation with live audio, derived mathematics, and an
+    animated architecture.
+  </p>
+  <div class="legend">
+    <span><i style="background:var(--accent2)"></i> Core / foundations</span>
+    <span><i style="background:var(--accent4)"></i> Voice pillar</span>
+    <span><i style="background:var(--accent5)"></i> Music pillar</span>
+  </div>
+  <div class="parts" id="partsGrid"><!-- injected --></div>
+  <p class="note">
+    Status dots reflect what is published. Part&nbsp;1 anchors the series and locks the
+    style; the remaining parts follow, each linked here as it ships.
+  </p>
+</section>
+
+<section id="eval">
+  <h2><span class="num">§</span>How we judge a synthesiser</h2>
+  <p>
+    A generative-audio model cannot be scored by a single loss. The field uses a ladder
+    of metrics — from human listening tests to embedding-space distances — and each part
+    reports the ones that matter for its task. The two you will meet everywhere:
+  </p>
+  <h3>Perceptual: the Mean Opinion Score</h3>
+  <p>
+    Human listeners rate naturalness from 1 (bad) to 5 (excellent); the
+    <strong>MOS</strong> is the average. Its rigorous cousin <strong>MUSHRA</strong>
+    hides a reference and anchors among the candidates. Slow and expensive, but the
+    only ground truth for "does this sound real?"
+  </p>
+  <h3>Objective: the Fréchet Audio Distance</h3>
+  <p>
+    <strong>FAD</strong> mirrors the FID of image generation: embed real and generated
+    audio with a pretrained network, fit a Gaussian to each set, and measure the
+    distance between them —
+  </p>
+  <div class="math">
+    $$\mathrm{FAD}=\lVert\mu_r-\mu_g\rVert^2+\operatorname{tr}\!\left(\Sigma_r+\Sigma_g-2\left(\Sigma_r\Sigma_g\right)^{1/2}\right)$$
+  </div>
+  <p>
+    where $(\mu_r,\Sigma_r)$ and $(\mu_g,\Sigma_g)$ are the mean and covariance of the
+    real and generated embeddings. Lower is better; unlike a per-sample loss it rewards
+    matching the <em>distribution</em> of a corpus. Part&nbsp;12 dissects it, and
+    <strong>CLAP score</strong> — how well generated audio matches a text prompt — in full.
+  </p>
+</section>
+
+<section id="how">
+  <h2><span class="num">§</span>How to read this series</h2>
+  <p>
+    Every part is a single self-contained web page — no installation, no accounts, no
+    audio files downloaded. Open it and the sound is generated on your machine.
+  </p>
+  <table>
+    <tbody>
+      <tr><td><strong>Turn the volume up</strong></td><td>The demos are the argument. Reading about a vocoder is nothing like hearing Griffin&ndash;Lim and HiFi-GAN invert the same spectrogram.</td></tr>
+      <tr><td><strong>Open the derivations</strong></td><td>Collapsed <code>&#9656; derivation</code> panels hold the full maths. Skip them for the intuition; open them for the proof.</td></tr>
+      <tr><td><strong>Follow the cross-links</strong></td><td>Each part ends with links to its neighbours. Diffusion (P8) makes more sense after codecs (P9) which makes more sense after vocoders (P3).</td></tr>
+      <tr><td><strong>These are teaching models</strong></td><td>The in-browser networks are small, real implementations of the ideas — enough to hear the mechanism — not the billion-parameter production systems. The maths is the real thing.</td></tr>
+    </tbody>
+  </table>
+  <div class="references">
+    <h3>Foundational reading</h3>
+    <ol>
+      <li>van den Oord, A. et&nbsp;al. (2016). <em>WaveNet: A Generative Model for Raw Audio.</em> arXiv:1609.03499.</li>
+      <li>Engel, J. et&nbsp;al. (2020). <em>DDSP: Differentiable Digital Signal Processing.</em> ICLR.</li>
+      <li>Kong, J., Kim, J., Bae, J. (2020). <em>HiFi-GAN.</em> NeurIPS.</li>
+      <li>Défossez, A. et&nbsp;al. (2022). <em>High Fidelity Neural Audio Compression (EnCodec).</em> arXiv:2210.13438.</li>
+      <li>Copet, J. et&nbsp;al. (2023). <em>Simple and Controllable Music Generation (MusicGen).</em> NeurIPS.</li>
+      <li>Kilgour, K. et&nbsp;al. (2019). <em>Fréchet Audio Distance.</em> Interspeech.</li>
+    </ol>
+  </div>
+</section>
+
+<footer>
+  <p>
+    Neural Sound Synthesis &middot; part of the
+    <a href="https://github.com/BrendanJamesLynskey/DSP_and_Music" target="_blank" rel="noopener">DSP &amp; Music</a>
+    collection.<br>
+    Single-file HTML/CSS/JS &middot; Web Audio API &middot; KaTeX &middot; no dependencies, no build step.
+  </p>
+</footer>
+
+<script>
+(function(){
+"use strict";
+const DPR = window.devicePixelRatio || 1;
+function setupCanvas(canvas, w, h){
+  canvas.width=Math.round(w*DPR); canvas.height=Math.round(h*DPR);
+  canvas.style.height=h+'px';
+  const ctx=canvas.getContext('2d'); ctx.setTransform(DPR,0,0,DPR,0,0); return ctx;
+}
+function fitWidth(canvas){ const r=canvas.parentElement.getBoundingClientRect(); return Math.max(320,Math.floor(r.width)); }
+
+// ── The twelve parts data ──────────────────────────────────────
+const BASE='https://brendanjameslynskey.github.io/';
+const PARTS=[
+  {n:'01',slug:'Neural_Sound_Synthesis_01_Foundations_and_Landscape',pillar:'core',live:true,
+   t:'Foundations & the Landscape',d:'Why neural audio is hard, the four representation domains, the generative-model taxonomy, and how the field measures success.'},
+  {n:'02',slug:'Neural_Sound_Synthesis_02_Autoregressive_Waveform',pillar:'core',live:false,
+   t:'Autoregressive Waveform Models',d:'WaveNet’s dilated causal convolutions, μ-law companding, SampleRNN and WaveRNN — predicting audio one sample at a time.'},
+  {n:'03',slug:'Neural_Sound_Synthesis_03_Neural_Vocoders_GAN',pillar:'voice',live:false,
+   t:'Neural Vocoders (GAN)',d:'Turning a mel-spectrogram back into a waveform: MelGAN, Parallel WaveGAN, and HiFi-GAN’s multi-period/multi-scale discriminators.'},
+  {n:'04',slug:'Neural_Sound_Synthesis_04_End_to_End_TTS',pillar:'voice',live:false,
+   t:'End-to-End Text-to-Speech',d:'Tacotron’s attention, FastSpeech’s duration prediction, and VITS — the flow + VAE + adversarial end-to-end synthesiser.'},
+  {n:'05',slug:'Neural_Sound_Synthesis_05_Neural_Singing_Voice',pillar:'voice',live:false,
+   t:'Neural Singing Voice',d:'What makes singing harder than speech: pitch, vibrato and timing control. DiffSinger, NNSVS, and voice conversion (so-vits, RVC).'},
+  {n:'06',slug:'Neural_Sound_Synthesis_06_Differentiable_DSP',pillar:'core',live:false,
+   t:'Differentiable DSP',d:'DDSP: bolting a harmonic-plus-noise synthesiser onto a neural network so gradients flow through the oscillators. Timbre transfer.'},
+  {n:'07',slug:'Neural_Sound_Synthesis_07_GAN_Instrument_Synthesis',pillar:'core',live:false,
+   t:'GAN Instrument Synthesis',d:'WaveGAN, SpecGAN and GANSynth — adversarial timbre, instantaneous frequency, and morphing a latent space of instruments.'},
+  {n:'08',slug:'Neural_Sound_Synthesis_08_Diffusion_and_Flow',pillar:'core',live:false,
+   t:'Diffusion & Flow Models',d:'Score-based generation for audio: DiffWave, WaveGrad, noise schedules, classifier-free guidance and fast few-step samplers.'},
+  {n:'09',slug:'Neural_Sound_Synthesis_09_Neural_Audio_Codecs',pillar:'music',live:false,
+   t:'Neural Audio Codecs',d:'SoundStream, EnCodec and DAC. Residual vector quantization turns audio into discrete tokens — the bridge to language models.'},
+  {n:'10',slug:'Neural_Sound_Synthesis_10_LM_Music_Generation',pillar:'music',live:false,
+   t:'Language-Model Music Generation',d:'AudioLM’s semantic + acoustic tokens, MusicLM, MusicGen and Jukebox: generating audio the way GPT generates text.'},
+  {n:'11',slug:'Neural_Sound_Synthesis_11_Latent_Diffusion_Text_to_Audio',pillar:'music',live:false,
+   t:'Latent Diffusion: Text-to-Audio',d:'AudioLDM, Stable Audio and Riffusion. Diffusion in a learned latent, steered by CLAP text–audio embeddings.'},
+  {n:'12',slug:'Neural_Sound_Synthesis_12_Realtime_Control_Frontiers',pillar:'core',live:false,
+   t:'Real-Time, Control & Frontiers',d:'RAVE’s streaming VAE, controllability, evaluation (FAD/CLAP), watermarking and ethics — and where the field goes next.'},
+];
+(function grid(){
+  const el=document.getElementById('partsGrid');
+  el.innerHTML=PARTS.map(p=>`
+    <a class="part pillar-${p.pillar}" href="${BASE}${p.slug}/" target="_blank" rel="noopener" style="border-bottom:1px solid var(--border)">
+      <span class="tag ${p.live?'live':'soon'}">${p.live?'live':'soon'}</span>
+      <span class="pnum">PART ${p.n}</span>
+      <h4>${p.t}</h4>
+      <p>${p.d}</p>
+      <span class="plink">${p.live?'Launch →':'Coming soon'}</span>
+    </a>`).join('');
+})();
+
+// ── Hero: scrolling mel-spectrogram with a latent-flow overlay ──
+(function hero(){
+  const c=document.getElementById('heroCanvas'); if(!c) return;
+  const W=()=>Math.max(320,document.documentElement.clientWidth);
+  const H=()=>Math.max(400,Math.min(window.innerHeight,900));
+  let ctx=setupCanvas(c,W(),H());
+  const COLS=180, ROWS=64;
+  const spec=[]; for(let i=0;i<COLS;i++) spec.push(new Float32Array(ROWS));
+  // seed with a moving formant-like pattern
+  let phase=0;
+  function newCol(t){
+    const col=new Float32Array(ROWS);
+    // two drifting formants + harmonic comb + noise floor
+    const f1=12+8*Math.sin(t*0.7), f2=30+10*Math.sin(t*0.4+1);
+    const f0=4+2*Math.sin(t*0.23);
+    for(let r=0;r<ROWS;r++){
+      let v=0.10*Math.exp(-Math.pow((r-f1)/4,2))+0.09*Math.exp(-Math.pow((r-f2)/5,2));
+      // harmonic comb
+      if(r>2 && Math.abs((r%f0))<0.6) v+=0.5;
+      v*=0.6+0.4*Math.sin(t*2+r*0.2);
+      v+=0.03*Math.abs(Math.sin(r*12.9+t*5))*Math.abs(Math.sin(r*7.1));
+      col[r]=Math.min(1,v);
+    }
+    return col;
+  }
+  function color(v){
+    // viridis-ish, tinted to accent
+    const a=Math.max(0,Math.min(1,v));
+    const r=Math.round(30+a*a*180+a*40);
+    const g=Math.round(20+a*120);
+    const b=Math.round(60+a*180);
+    return `rgba(${r},${g},${b},${0.25+a*0.7})`;
+  }
+  let last=performance.now();
+  function frame(now){
+    const w=W(),h=H();
+    if(c.width!==Math.round(w*DPR)||c.height!==Math.round(h*DPR)) ctx=setupCanvas(c,w,h);
+    const dt=Math.min(0.05,(now-last)/1000); last=now; phase+=dt;
+    // advance spectrogram
+    if((now|0)%2===0){ spec.shift(); spec.push(newCol(phase)); }
+    ctx.fillStyle='#0a0b0f'; ctx.fillRect(0,0,w,h);
+    const cw=w/COLS, chh=(h*0.62)/ROWS, top=h*0.20;
+    for(let i=0;i<COLS;i++){
+      const col=spec[i];
+      for(let r=0;r<ROWS;r++){
+        const v=col[r]; if(v<0.04) continue;
+        ctx.fillStyle=color(v);
+        ctx.fillRect(i*cw, top+(ROWS-1-r)*chh, cw+1, chh+1);
+      }
+    }
+    // waveform overlay riding along the bottom
+    ctx.strokeStyle='rgba(139,123,240,0.85)'; ctx.lineWidth=2; ctx.beginPath();
+    const wy=h*0.90, wa=h*0.06;
+    for(let x=0;x<=w;x+=3){
+      const tt=x/w*40+phase*6;
+      const env=0.5+0.5*Math.sin(phase*1.3+x*0.004);
+      const y=wy - env*wa*(Math.sin(tt)+0.5*Math.sin(tt*2.01)+0.3*Math.sin(tt*3.02));
+      if(x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  window.addEventListener('resize',()=>{ ctx=setupCanvas(c,W(),H()); });
+})();
+
+// ── Interactive taxonomy map ──────────────────────────────────
+(function map(){
+  const c=document.getElementById('mapViz'); if(!c) return;
+  const cap=document.getElementById('mapCaption');
+  const H=440; let W=fitWidth(c); let ctx=setupCanvas(c,W,H);
+  // domains on x, families on y
+  const DOMAINS=['Raw waveform','Spectrogram','Discrete tokens','Latent'];
+  const FAMILIES=['Autoregressive','GAN','Diffusion / Flow','VAE'];
+  // node: dx (0..3 domain idx, fractional ok), fy (0..3 family idx), label, part, color, blurb
+  const NODES=[
+    {dx:0,fy:0,l:'WaveNet',p:'P2',c:'#4ac7e8',b:'Autoregressive over raw μ-law samples — the model that started it all (2016).'},
+    {dx:0,fy:0.35,l:'SampleRNN',p:'P2',c:'#4ac7e8',b:'Hierarchical RNN generating raw audio at multiple time scales.'},
+    {dx:1,fy:1,l:'MelGAN',p:'P3',c:'#e85a7a',b:'GAN vocoder inverting mel-spectrograms to waveforms, fully feed-forward.'},
+    {dx:0.9,fy:1,l:'HiFi-GAN',p:'P3',c:'#e85a7a',b:'Multi-period + multi-scale discriminators; the workhorse neural vocoder.'},
+    {dx:1,fy:0,l:'Tacotron 2',p:'P4',c:'#e85a7a',b:'Autoregressive mel-spectrogram decoder with attention alignment.'},
+    {dx:1.4,fy:2.4,l:'VITS',p:'P4',c:'#e85a7a',b:'End-to-end: normalizing flow + VAE + adversarial training in one model.'},
+    {dx:1.1,fy:2,l:'DiffSinger',p:'P5',c:'#e85a7a',b:'Shallow diffusion for expressive singing-voice spectrograms.'},
+    {dx:0.5,fy:3,l:'DDSP',p:'P6',c:'#5ce89a',b:'A differentiable harmonic+noise synth — strong DSP prior, tiny model.'},
+    {dx:1,fy:1.3,l:'GANSynth',p:'P7',c:'#8b7bf0',b:'GAN over log-magnitude + instantaneous frequency; morphable instrument timbre.'},
+    {dx:0,fy:2,l:'DiffWave',p:'P8',c:'#4ac7e8',b:'Diffusion directly on the raw waveform; a few denoising steps to audio.'},
+    {dx:2,fy:3,l:'EnCodec',p:'P9',c:'#e8a44a',b:'Neural codec: residual vector quantization into discrete tokens.'},
+    {dx:2,fy:0.2,l:'MusicGen',p:'P10',c:'#e8a44a',b:'A transformer language model over EnCodec tokens — text-to-music.'},
+    {dx:2,fy:0,l:'AudioLM',p:'P10',c:'#e8a44a',b:'Semantic + acoustic token hierarchy generated autoregressively.'},
+    {dx:3,fy:2,l:'Stable Audio',p:'P11',c:'#e8a44a',b:'Latent diffusion with timing + text conditioning for full tracks.'},
+    {dx:2.6,fy:2,l:'AudioLDM',p:'P11',c:'#e8a44a',b:'Latent diffusion steered by CLAP text–audio embeddings.'},
+    {dx:3,fy:3,l:'RAVE',p:'P12',c:'#8b7bf0',b:'Streaming VAE for real-time timbre transfer on a laptop.'},
+  ];
+  let hover=-1;
+  function pos(n){
+    const padL=90,padR=30,padT=40,padB=54;
+    const x=padL+(n.dx/3)*(W-padL-padR);
+    const y=padT+(n.fy/3)*(H-padT-padB);
+    return {x,y};
+  }
+  function draw(){
+    ctx.fillStyle='#12141c'; ctx.fillRect(0,0,W,H);
+    const padL=90,padR=30,padT=40,padB=54;
+    // grid
+    ctx.strokeStyle='rgba(74,157,232,0.08)'; ctx.lineWidth=1;
+    for(let i=0;i<4;i++){
+      const x=padL+(i/3)*(W-padL-padR);
+      ctx.beginPath(); ctx.moveTo(x,padT); ctx.lineTo(x,H-padB); ctx.stroke();
+      const y=padT+(i/3)*(H-padT-padB);
+      ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y); ctx.stroke();
+    }
+    // axis labels
+    ctx.fillStyle='#8a8d9a'; ctx.font="10px 'Lucida Console',monospace"; ctx.textAlign='center';
+    for(let i=0;i<4;i++){ const x=padL+(i/3)*(W-padL-padR); ctx.fillText(DOMAINS[i], x, H-padB+22); }
+    ctx.textAlign='right';
+    for(let i=0;i<4;i++){ const y=padT+(i/3)*(H-padT-padB); ctx.fillText(FAMILIES[i], padL-10, y+3); }
+    ctx.textAlign='center'; ctx.fillStyle='#5b5e6b';
+    ctx.fillText('REPRESENTATION DOMAIN →', W*0.5, H-8);
+    // nodes
+    NODES.forEach((n,i)=>{
+      const p=pos(n); const hl=(i===hover);
+      ctx.beginPath(); ctx.arc(p.x,p.y,hl?8:5,0,2*Math.PI);
+      ctx.fillStyle=n.c; ctx.globalAlpha=hl?1:0.85; ctx.fill(); ctx.globalAlpha=1;
+      if(hl){ ctx.strokeStyle=n.c; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(p.x,p.y,13,0,2*Math.PI); ctx.stroke(); }
+      ctx.fillStyle=hl?'#fff':'#c9cbd6'; ctx.font=(hl?"bold ":"")+"11px 'Lucida Console',monospace";
+      ctx.textAlign='left';
+      ctx.fillText(n.l, p.x+10, p.y+4);
+    });
+  }
+  c.addEventListener('mousemove',e=>{
+    const r=c.getBoundingClientRect(); const mx=(e.clientX-r.left), my=(e.clientY-r.top);
+    let best=-1,bd=1e9;
+    NODES.forEach((n,i)=>{ const p=pos(n); const d=Math.hypot(p.x-mx,p.y-my); if(d<bd){bd=d;best=i;} });
+    hover=(bd<26)?best:-1;
+    cap.innerHTML = hover>=0 ? `<strong style="color:${NODES[hover].c}">${NODES[hover].l}</strong> (${NODES[hover].p}) — ${NODES[hover].b}` : 'The landscape of neural sound synthesis — hover any node.';
+    draw();
+  });
+  c.addEventListener('mouseleave',()=>{ hover=-1; cap.textContent='The landscape of neural sound synthesis — hover any node.'; draw(); });
+  window.addEventListener('resize',()=>{ W=fitWidth(c); ctx=setupCanvas(c,W,H); draw(); });
+  draw();
+})();
+
+// ── scroll-spy ────────────────────────────────────────────────
+(function toc(){
+  const links=document.querySelectorAll('nav#toc a');
+  const secs=Array.from(links).map(a=>document.querySelector(a.getAttribute('href'))).filter(Boolean);
+  function onScroll(){
+    const y=window.scrollY+120; let k=0;
+    for(let i=0;i<secs.length;i++){ if(secs[i].offsetTop<=y) k=i; }
+    links.forEach(a=>a.classList.remove('active')); if(links[k]) links[k].classList.add('active');
+  }
+  window.addEventListener('scroll',onScroll,{passive:true}); onScroll();
+})();
+})();
+</script>
+</body>
+</html>
