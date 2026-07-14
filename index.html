@@ -242,8 +242,8 @@ footer a{color:var(--accent2)}
   </div>
   <div class="parts" id="partsGrid"><!-- injected --></div>
   <p class="note">
-    Status dots reflect what is published. Part&nbsp;1 anchors the series and locks the
-    style; the remaining parts follow, each linked here as it ships.
+    All twelve parts are live. Read them in order for a complete education, or jump
+    straight to a technique — each stands alone.
   </p>
 </section>
 
@@ -330,27 +330,27 @@ const BASE='https://brendanjameslynskey.github.io/';
 const PARTS=[
   {n:'01',slug:'Neural_Sound_Synthesis_01_Foundations_and_Landscape',pillar:'core',live:true,
    t:'Foundations & the Landscape',d:'Why neural audio is hard, the four representation domains, the generative-model taxonomy, and how the field measures success.'},
-  {n:'02',slug:'Neural_Sound_Synthesis_02_Autoregressive_Waveform',pillar:'core',live:false,
+  {n:'02',slug:'Neural_Sound_Synthesis_02_Autoregressive_Waveform',pillar:'core',live:true,
    t:'Autoregressive Waveform Models',d:'WaveNet’s dilated causal convolutions, μ-law companding, SampleRNN and WaveRNN — predicting audio one sample at a time.'},
-  {n:'03',slug:'Neural_Sound_Synthesis_03_Neural_Vocoders_GAN',pillar:'voice',live:false,
+  {n:'03',slug:'Neural_Sound_Synthesis_03_Neural_Vocoders_GAN',pillar:'voice',live:true,
    t:'Neural Vocoders (GAN)',d:'Turning a mel-spectrogram back into a waveform: MelGAN, Parallel WaveGAN, and HiFi-GAN’s multi-period/multi-scale discriminators.'},
-  {n:'04',slug:'Neural_Sound_Synthesis_04_End_to_End_TTS',pillar:'voice',live:false,
+  {n:'04',slug:'Neural_Sound_Synthesis_04_End_to_End_TTS',pillar:'voice',live:true,
    t:'End-to-End Text-to-Speech',d:'Tacotron’s attention, FastSpeech’s duration prediction, and VITS — the flow + VAE + adversarial end-to-end synthesiser.'},
-  {n:'05',slug:'Neural_Sound_Synthesis_05_Neural_Singing_Voice',pillar:'voice',live:false,
+  {n:'05',slug:'Neural_Sound_Synthesis_05_Neural_Singing_Voice',pillar:'voice',live:true,
    t:'Neural Singing Voice',d:'What makes singing harder than speech: pitch, vibrato and timing control. DiffSinger, NNSVS, and voice conversion (so-vits, RVC).'},
-  {n:'06',slug:'Neural_Sound_Synthesis_06_Differentiable_DSP',pillar:'core',live:false,
+  {n:'06',slug:'Neural_Sound_Synthesis_06_Differentiable_DSP',pillar:'core',live:true,
    t:'Differentiable DSP',d:'DDSP: bolting a harmonic-plus-noise synthesiser onto a neural network so gradients flow through the oscillators. Timbre transfer.'},
-  {n:'07',slug:'Neural_Sound_Synthesis_07_GAN_Instrument_Synthesis',pillar:'core',live:false,
+  {n:'07',slug:'Neural_Sound_Synthesis_07_GAN_Instrument_Synthesis',pillar:'core',live:true,
    t:'GAN Instrument Synthesis',d:'WaveGAN, SpecGAN and GANSynth — adversarial timbre, instantaneous frequency, and morphing a latent space of instruments.'},
-  {n:'08',slug:'Neural_Sound_Synthesis_08_Diffusion_and_Flow',pillar:'core',live:false,
+  {n:'08',slug:'Neural_Sound_Synthesis_08_Diffusion_and_Flow',pillar:'core',live:true,
    t:'Diffusion & Flow Models',d:'Score-based generation for audio: DiffWave, WaveGrad, noise schedules, classifier-free guidance and fast few-step samplers.'},
-  {n:'09',slug:'Neural_Sound_Synthesis_09_Neural_Audio_Codecs',pillar:'music',live:false,
+  {n:'09',slug:'Neural_Sound_Synthesis_09_Neural_Audio_Codecs',pillar:'music',live:true,
    t:'Neural Audio Codecs',d:'SoundStream, EnCodec and DAC. Residual vector quantization turns audio into discrete tokens — the bridge to language models.'},
-  {n:'10',slug:'Neural_Sound_Synthesis_10_LM_Music_Generation',pillar:'music',live:false,
+  {n:'10',slug:'Neural_Sound_Synthesis_10_LM_Music_Generation',pillar:'music',live:true,
    t:'Language-Model Music Generation',d:'AudioLM’s semantic + acoustic tokens, MusicLM, MusicGen and Jukebox: generating audio the way GPT generates text.'},
-  {n:'11',slug:'Neural_Sound_Synthesis_11_Latent_Diffusion_Text_to_Audio',pillar:'music',live:false,
+  {n:'11',slug:'Neural_Sound_Synthesis_11_Latent_Diffusion_Text_to_Audio',pillar:'music',live:true,
    t:'Latent Diffusion: Text-to-Audio',d:'AudioLDM, Stable Audio and Riffusion. Diffusion in a learned latent, steered by CLAP text–audio embeddings.'},
-  {n:'12',slug:'Neural_Sound_Synthesis_12_Realtime_Control_Frontiers',pillar:'core',live:false,
+  {n:'12',slug:'Neural_Sound_Synthesis_12_Realtime_Control_Frontiers',pillar:'core',live:true,
    t:'Real-Time, Control & Frontiers',d:'RAVE’s streaming VAE, controllability, evaluation (FAD/CLAP), watermarking and ethics — and where the field goes next.'},
 ];
 (function grid(){
