@@ -1,3 +1,7 @@
+<!-- portfolio-strip:start (brief 40) -->
+<sub>**Brendan Lynskey** · [Portfolio home](https://brendanjameslynskey.github.io/) · [Interactive sites](https://brendanjameslynskey.github.io/#sites)</sub>
+<!-- portfolio-strip:end -->
+
 # Neural Sound Synthesis
 
 A twelve-part interactive series on the machine-learning techniques that generate sound — the human voice, music, and instruments. Deep technical detail, live in-browser demos, and the mathematics worked all the way through. Every sound is synthesised live via the Web Audio API; every diagram computes in real time.
